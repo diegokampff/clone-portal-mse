@@ -62,6 +62,21 @@
                 </div>
             </div>
 
+            <div class="section full-width">
+                <p class="section-title">Ramo de Atuação:</p>
+
+                <div class="inline-field">
+                    <select id="ramoSelect">
+                        <option value="">Selecione um ramo</option>
+                    </select>
+                    <button type="button" class="add-btn" id="addRamo">+</button>
+                </div>
+
+                <div id="ramosSelecionados"></div>
+
+                <input type="hidden" name="ramos" id="ramosInput">
+            </div>
+
             <input type="text" name="cnpj_responsavel" placeholder="CNPJ do Responsável" required>
             <input type="text" name="nome_responsavel" placeholder="Nome do Responsável" required>
 

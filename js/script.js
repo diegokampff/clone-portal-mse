@@ -1,5 +1,4 @@
 $(function () {
-
   function showMsg(text, ok) {
     $("#msgCadastro").text(text).css({
       display: "block",
@@ -14,8 +13,12 @@ $(function () {
     });
   }
 
+  function onlyDigits(v) {
+    return (v || "").toString().replace(/\D+/g, "");
+  }
+
   function validarCNPJ(cnpj) {
-    cnpj = cnpj.replace(/[^\d]+/g, '');
+    cnpj = onlyDigits(cnpj);
     if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
 
     let t = cnpj.length - 2;
@@ -29,7 +32,7 @@ $(function () {
       if (p < 2) p = 9;
     }
 
-    let r = s % 11 < 2 ? 0 : 11 - s % 11;
+    let r = s % 11 < 2 ? 0 : 11 - (s % 11);
     if (r != d.charAt(0)) return false;
 
     t++;
@@ -42,37 +45,63 @@ $(function () {
       if (p < 2) p = 9;
     }
 
-    r = s % 11 < 2 ? 0 : 11 - s % 11;
+    r = s % 11 < 2 ? 0 : 11 - (s % 11);
     return r == d.charAt(1);
   }
+
+  const UFs = [
+    "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+    "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
+  ];
 
   const $pais = $("#pais");
   const $estado = $("#estado");
   const $municipio = $("#municipio");
 
+  function carregarUFs() {
+    $estado.html('<option value="">Selecione o Estado</option>');
+    UFs.forEach(uf => $estado.append(`<option value="${uf}">${uf}</option>`));
+  }
+
   $estado.prop("disabled", true);
   $municipio.prop("disabled", true);
 
   $pais.on("change", function () {
-    $estado.html('<option value="">Selecione o Estado</option>');
     $municipio.html('<option value="">Selecione o Município</option>').prop("disabled", true);
-
     if ($(this).val() === "Brasil") {
-      $estado.prop("disabled", false).append('<option value="PR">Paraná</option>');
+      $estado.prop("disabled", false);
+      carregarUFs();
     } else {
-      $estado.prop("disabled", true);
+      $estado.prop("disabled", true).html('<option value="">Selecione o Estado</option>');
     }
   });
 
   $estado.on("change", function () {
     $municipio.html('<option value="">Selecione o Município</option>');
-
-    if ($(this).val() === "PR") {
-      $municipio.prop("disabled", false).append('<option value="Londrina">Londrina</option>');
+    if ($(this).val()) {
+      $municipio.prop("disabled", false);
     } else {
       $municipio.prop("disabled", true);
     }
   });
+
+  function setEstadoMunicipio(uf, cidade) {
+    if (!uf) return;
+
+    if ($pais.val() !== "Brasil") $pais.val("Brasil").trigger("change");
+    if ($estado.prop("disabled")) $estado.prop("disabled", false);
+
+    if ($estado.find(`option[value="${uf}"]`).length === 0) {
+      $estado.append(`<option value="${uf}">${uf}</option>`);
+    }
+    $estado.val(uf);
+
+    if (cidade) {
+      $municipio.prop("disabled", false);
+      $municipio.html(`<option value="${cidade}">${cidade}</option>`);
+      $municipio.val(cidade);
+    }
+  }
 
   const ramos = [
     "MAQUINAS LINHA AMARELA, TERRAPLANAGEM E ESCAVAÇÃO, LOCAÇÃO DE",
@@ -89,7 +118,7 @@ $(function () {
   const selecionados = [];
   const $select = $("#ramoSelect");
   const $lista = $("#ramosSelecionados");
-  const $input = $("#ramosInput");
+  const $inputRamos = $("#ramosInput");
 
   if ($select.length) {
     ramos.forEach(r => $select.append(`<option value="${r}">${r}</option>`));
@@ -107,7 +136,7 @@ $(function () {
     selecionados.forEach((r, i) => {
       $lista.append(`<div class="ramo-item"><span>${r}</span><a href="#" data-index="${i}">×</a></div>`);
     });
-    $input.val(selecionados.join(" | "));
+    $inputRamos.val(selecionados.join(" | "));
   }
 
   $lista.on("click", "a", function (e) {
@@ -135,6 +164,60 @@ $(function () {
     if (!on) $camposEmpresa.val("");
   });
 
+  $("#cep").on("blur", function () {
+    const cep = onlyDigits($(this).val());
+    if (!cep) return;
+
+    $.ajax({
+      url: "api/buscar_cep.php",
+      method: "GET",
+      dataType: "json",
+      data: { cep },
+      success: function (resp) {
+        if (!resp.ok) return;
+
+        if (resp.logradouro) $("#rua").val(resp.logradouro);
+        if (resp.bairro) $("#bairro").val(resp.bairro);
+        if (resp.complemento) $("#complemento").val(resp.complemento);
+
+        setEstadoMunicipio(resp.uf, resp.localidade);
+      }
+    });
+  });
+
+  $("#cnpj").on("blur", function () {
+    const cnpj = onlyDigits($(this).val());
+    if (!cnpj) return;
+
+    if (!validarCNPJ(cnpj)) {
+      showMsg("CNPJ inválido.", false);
+      return;
+    }
+
+    $.ajax({
+      url: "api/buscar_cnpj.php",
+      method: "GET",
+      dataType: "json",
+      data: { cnpj },
+      success: function (resp) {
+        if (!resp.ok) return;
+
+        if (resp.razao_social) $("#razao").val(resp.razao_social);
+        if (resp.nome_fantasia) $("#fantasia").val(resp.nome_fantasia);
+        if (resp.descricao_situacao_cadastral) $("#situacao").val(resp.descricao_situacao_cadastral);
+
+        if (resp.cep) $("#cep").val(resp.cep);
+
+        if (resp.logradouro) $("#rua").val(resp.logradouro);
+        if (resp.numero) $("#numero").val(resp.numero);
+        if (resp.bairro) $("#bairro").val(resp.bairro);
+        if (resp.complemento) $("#complemento").val(resp.complemento);
+
+        setEstadoMunicipio(resp.uf, resp.municipio);
+      }
+    });
+  });
+
   $("#formCadastro").on("submit", function (e) {
     e.preventDefault();
 
@@ -142,7 +225,7 @@ $(function () {
     const senha = ($('[name="senha"]').val() || "").trim();
     const senha2 = ($('[name="senha_confirmacao"]').val() || "").trim();
 
-    if (!cnpj || !$("#razao").val().trim() || !$('[name="email"]').val().trim() || !senha) {
+    if (!cnpj || !$("#razao").val().trim() || !$("#email").val().trim() || !senha) {
       showMsg("Preencha todos os campos obrigatórios.", false);
       return;
     }
@@ -161,21 +244,11 @@ $(function () {
       url: $(this).attr("action"),
       method: "POST",
       data: $(this).serialize(),
-      success: function (resp) {
-        let data;
-        try {
-          data = typeof resp === "string" ? JSON.parse(resp) : resp;
-        } catch {
-          showMsg("Resposta inválida do servidor.", false);
-          return;
-        }
-
+      dataType: "json",
+      success: function (data) {
         showMsg(data.msg, data.ok);
-
         if (data.ok) {
-          setTimeout(() => {
-            window.location.href = "login.php";
-          }, 2000);
+          setTimeout(() => window.location.href = "login.php", 1200);
         }
       },
       error: function () {
@@ -183,5 +256,4 @@ $(function () {
       }
     });
   });
-
 });

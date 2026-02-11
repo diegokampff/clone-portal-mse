@@ -28,15 +28,15 @@
             <input type="text" name="nome_fantasia" id="fantasia" placeholder="Nome Fantasia" required>
             <input type="text" name="inscricao_estadual" id="inscricao" placeholder="Inscrição Estadual / Isento" required>
 
-            <input type="text" name="regime_icms" placeholder="ICMS" required>
-            <input type="text" name="situacao" placeholder="Situação" required>
-            <input type="tel" name="telefone" placeholder="Telefone" required>
-            <input type="email" name="email" placeholder="E-mail" required>
+            <input type="text" name="regime_icms" id="regime_icms" placeholder="ICMS" required>
+            <input type="text" name="situacao" id="situacao" placeholder="Situação" required>
+            <input type="tel" name="telefone" id="telefone" placeholder="Telefone" required>
+            <input type="email" name="email" id="email" placeholder="E-mail" required>
 
-            <input type="text" name="rua" placeholder="Rua">
-            <input type="text" name="numero" placeholder="Número">
-            <input type="text" name="bairro" placeholder="Bairro">
-            <input type="text" name="complemento" placeholder="Complemento">
+            <input type="text" name="rua" id="rua" placeholder="Rua">
+            <input type="text" name="numero" id="numero" placeholder="Número">
+            <input type="text" name="bairro" id="bairro" placeholder="Bairro">
+            <input type="text" name="complemento" id="complemento" placeholder="Complemento">
 
             <select name="pais" id="pais">
                 <option value="">Selecione o País</option>
@@ -47,7 +47,7 @@
                 <option value="">Selecione o Estado</option>
             </select>
 
-            <input type="text" name="cep" placeholder="CEP">
+            <input type="text" name="cep" id="cep" placeholder="CEP">
 
             <select name="municipio" id="municipio" disabled>
                 <option value="">Selecione o Município</option>
@@ -73,12 +73,11 @@
                 </div>
 
                 <div id="ramosSelecionados"></div>
-
                 <input type="hidden" name="ramos" id="ramosInput">
             </div>
 
-            <input type="text" name="cnpj_responsavel" placeholder="CNPJ do Responsável" required>
-            <input type="text" name="nome_responsavel" placeholder="Nome do Responsável" required>
+            <input type="text" name="cnpj_responsavel" id="cnpj_responsavel" placeholder="CNPJ do Responsável" required>
+            <input type="text" name="nome_responsavel" id="nome_responsavel" placeholder="Nome do Responsável" required>
 
             <div class="password-field">
                 <input type="password" name="senha" placeholder="Senha" required>
@@ -122,37 +121,7 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<script>
-const paisSelect = document.getElementById("pais");
-const estadoSelect = document.getElementById("estado");
-const municipioSelect = document.getElementById("municipio");
-
-paisSelect.addEventListener("change", () => {
-    estadoSelect.innerHTML = '<option value="">Selecione o Estado</option>';
-    municipioSelect.innerHTML = '<option value="">Selecione o Município</option>';
-    municipioSelect.disabled = true;
-
-    if (paisSelect.value === "Brasil") {
-        estadoSelect.disabled = false;
-        estadoSelect.innerHTML += '<option value="PR">Paraná</option>';
-    } else {
-        estadoSelect.disabled = true;
-    }
-});
-
-estadoSelect.addEventListener("change", () => {
-    municipioSelect.innerHTML = '<option value="">Selecione o Município</option>';
-
-    if (estadoSelect.value === "PR") {
-        municipioSelect.disabled = false;
-        municipioSelect.innerHTML += '<option value="Londrina">Londrina</option>';
-    } else {
-        municipioSelect.disabled = true;
-    }
-});
-</script>
-
 <script src="js/script.js"></script>
+
 </body>
 </html>
